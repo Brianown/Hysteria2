@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Text;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace HysteriaLite
@@ -25,6 +26,7 @@ namespace HysteriaLite
         private Label footer;
         private Button connectButton;
         private int selectedIndex = -1;
+        private bool connecting;
 
         public MainForm()
         {
@@ -276,6 +278,9 @@ namespace HysteriaLite
 
         private void ToggleConnection()
         {
+            if (connecting)
+                return;
+
             if (manager.IsRunning)
             {
                 manager.Stop();
@@ -291,22 +296,36 @@ namespace HysteriaLite
             }
 
             HysteriaProfile profile = profiles[selectedIndex];
-            Cursor previous = Cursor;
-            Cursor = Cursors.WaitCursor;
-            try
+            connecting = true;
+            listView.Enabled = false;
+            connectButton.Enabled = false;
+            RefreshStatus();
+
+            Task.Run(new Action(delegate
             {
-                manager.Start(profile);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(this, ex.Message, "连接失败",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-            finally
-            {
-                Cursor = previous;
-                RefreshStatus();
-            }
+                try
+                {
+                    manager.Start(profile);
+                    BeginInvoke(new Action(delegate
+                    {
+                        connecting = false;
+                        listView.Enabled = true;
+                        RefreshStatus();
+                    }));
+                }
+                catch (Exception ex)
+                {
+                    string message = ex.Message;
+                    BeginInvoke(new Action(delegate
+                    {
+                        connecting = false;
+                        listView.Enabled = true;
+                        RefreshStatus();
+                        MessageBox.Show(this, message, "连接失败",
+                            MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }));
+                }
+            }));
         }
 
         private void RefreshList()
@@ -352,7 +371,18 @@ namespace HysteriaLite
 
         private void RefreshStatus()
         {
+            if (connecting)
+            {
+                statusTitle.Text = "正在连接…";
+                statusSubtitle.Text = "正在检查/下载 Hysteria2 内核并启动 TUN，首次可能较慢";
+                connectButton.Text = "连接中…";
+                connectButton.Enabled = false;
+                return;
+            }
+
             bool running = manager.IsRunning;
+            connectButton.Enabled = true;
+
             if (running && selectedIndex >= 0 && selectedIndex < profiles.Count)
             {
                 statusTitle.Text = "已连接";
