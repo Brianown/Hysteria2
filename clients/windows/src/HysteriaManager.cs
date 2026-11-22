@@ -11,6 +11,7 @@ namespace HysteriaLite
     {
         private const string CoreUrl =
             "https://github.com/apernet/hysteria/releases/latest/download/hysteria-windows-amd64.exe";
+        private const long CoreMinBytes = 15 * 1024 * 1024;
 
         private readonly string baseDirectory;
         private Process process;
@@ -102,22 +103,40 @@ namespace HysteriaLite
 
         private void EnsureCore()
         {
-            if (File.Exists(HysteriaPath))
+            if (File.Exists(HysteriaPath) && new FileInfo(HysteriaPath).Length >= CoreMinBytes)
                 return;
+
+            // 删除上次中断留下的半截文件，避免把 2MB 的残缺 exe 当成完整内核。
             try
             {
+                if (File.Exists(HysteriaPath))
+                    File.Delete(HysteriaPath);
+            }
+            catch (Exception)
+            {
+            }
+
+            string partPath = HysteriaPath + ".part";
+            try
+            {
+                try { if (File.Exists(partPath)) File.Delete(partPath); } catch (Exception) { }
                 ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
                 using (WebClient client = new WebClient())
                 {
                     client.Headers.Add("User-Agent", "HysteriaLite");
-                    client.DownloadFile(CoreUrl, HysteriaPath);
+                    client.DownloadFile(CoreUrl, partPath);
                 }
+                if (!File.Exists(partPath) || new FileInfo(partPath).Length < CoreMinBytes)
+                    throw new InvalidOperationException("下载到的 hysteria.exe 不完整。");
+                File.Move(partPath, HysteriaPath);
             }
             catch (Exception ex)
             {
+                try { if (File.Exists(partPath)) File.Delete(partPath); } catch (Exception) { }
                 throw new InvalidOperationException(
-                    "缺少 hysteria.exe，自动下载失败：" + ex.Message + "\r\n" +
-                    "请手动下载 hysteria-windows-amd64.exe 并改名为 hysteria.exe 放在本目录。");
+                    "缺少完整的 hysteria.exe，自动下载失败：" + ex.Message + "\r\n\r\n" +
+                    "请手动下载：\r\n" + CoreUrl + "\r\n" +
+                    "改名为 hysteria.exe，放在 HysteriaLite.exe 同目录。");
             }
         }
 
