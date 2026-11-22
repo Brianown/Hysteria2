@@ -1,21 +1,38 @@
-# Hysteria2 客户端
+# Hysteria2 Lite for Windows
 
-## Windows
+基于 Hysteria2 官方内核的 TUN 图形客户端，界面与 Xray Lite 类似。
 
-1. 下载 NekoRay/NekoBox：<https://github.com/MatsuriDayo/nekoray/releases/latest>
-2. 解压运行；
-3. 从服务器 `/root/hysteria2/uri.txt` 复制 `hysteria2://` 链接；
-4. 从剪贴板导入；
-5. 启动 TUN 模式。
+## 使用
 
-## Android
+1. 下载 `HysteriaLite-Windows.zip` 并解压；
+2. 运行 `HysteriaLite.exe`（需要管理员权限）；
+3. 点“导入链接”，粘贴服务器生成的 `hysteria2://` 链接；
+4. 选中节点 → 连接；
+5. 首次连接会自动下载 `hysteria.exe` 到程序目录（约 24 MB）；
+6. TUN 全局模式，QUIC + TLS 1.3。
 
-1. 下载 NekoBox for Android：<https://github.com/MatsuriDayo/NekoBoxForAndroid/releases/latest>
-2. 扫描 `/root/hysteria2/uri.png`，或导入 URI；
-3. 连接。
+如果自动下载失败，可以手动下载：
 
-## 注意
+```text
+https://github.com/apernet/hysteria/releases/latest/download/hysteria-windows-amd64.exe
+```
 
-- 自签名证书需要 `insecure=1`；
-- 如果启用 Salamander，URI 里会带 `obfs=salamander&obfs-password=...`；
-- 云安全组放行 UDP 443。
+改名为 `hysteria.exe`，放在 `HysteriaLite.exe` 同目录。
+
+## 文件
+
+```text
+HysteriaLite.exe   界面
+wintun.dll         Windows TUN 驱动
+hysteria.exe       首次连接自动下载
+client.yaml        连接时自动生成
+hysteria.log       内核日志
+```
+
+## 构建
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\build.ps1
+```
+
+需要 .NET Framework 4.x 的 `csc.exe`。

@@ -43,18 +43,28 @@ sudo HY_OBFS=1 bash server/install.sh
 
 ## 客户端
 
-### Windows
+### Windows：Hysteria2 Lite（自研 GUI）
 
-- [NekoRay / NekoBox](https://github.com/MatsuriDayo/nekoray/releases/latest)
-- 或 v2rayN（支持 Hysteria2）
+<https://github.com/Brianown/Hysteria2/raw/main/release/HysteriaLite-Windows.zip>
 
-导入服务器上的 `hysteria2://` URI，开启 TUN/系统代理。
+- 解压后运行 `HysteriaLite.exe`（需要管理员权限）；
+- 导入 `hysteria2://` 链接；
+- 首次连接自动下载 Hysteria2 内核；
+- TUN 全局模式，QUIC + TLS 1.3；
+- 界面与 Xray Lite 类似。
 
 ### Android
 
-- [NekoBox for Android](https://github.com/MatsuriDayo/NekoBoxForAndroid/releases/latest)
+Android 自研 GUI 尚未完成，当前请使用 NekoBox for Android：
 
-导入 URI 或扫码。
+<https://github.com/MatsuriDayo/NekoBoxForAndroid/releases/latest>
+
+导入 `hysteria2://` 链接或扫码。
+
+### 关于“同款界面”
+
+Windows 已提供同类简洁 GUI；Android 仍是 NekoBox，后续再单独开发。
+
 
 ## 关于证书
 
