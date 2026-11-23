@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net;
+using System.Runtime.InteropServices;
+using Microsoft.Win32;
 using System.Text;
 using System.Threading;
 
@@ -17,6 +19,9 @@ namespace HysteriaLite
         private Process process;
         private readonly object logLock = new object();
         private string logPath;
+        private bool proxyWasSet;
+        private object oldProxyEnable;
+        private object oldProxyServer;
 
         public HysteriaManager(string baseDirectory)
         {
@@ -37,13 +42,14 @@ namespace HysteriaLite
             }
         }
 
-        public void Start(HysteriaProfile profile)
+        public void Start(HysteriaProfile profile, bool tunMode)
         {
             Stop();
             EnsureCore();
+            if (!tunMode) SetSystemProxy();
 
             string configPath = Path.Combine(baseDirectory, "client.yaml");
-            File.WriteAllText(configPath, BuildConfig(profile), new UTF8Encoding(false));
+            File.WriteAllText(configPath, BuildConfig(profile, tunMode), new UTF8Encoding(false));
             logPath = Path.Combine(baseDirectory, "hysteria.log");
             try { File.WriteAllText(logPath, string.Empty, new UTF8Encoding(false)); } catch (Exception) { }
 
@@ -140,7 +146,7 @@ namespace HysteriaLite
             }
         }
 
-        private string BuildConfig(HysteriaProfile profile)
+        private string BuildConfig(HysteriaProfile profile, bool tunMode)
         {
             StringBuilder b = new StringBuilder();
             b.AppendLine("server: " + profile.Host + ":" + profile.Port);
@@ -194,5 +200,53 @@ namespace HysteriaLite
             }
             catch (Exception) { return string.Empty; }
         }
-    }
+        [DllImport("wininet.dll", SetLastError = true)]
+        private static extern bool InternetSetOption(IntPtr hInternet, int option, IntPtr buffer, int bufferLength);
+        private const int InternetOptionSettingsChanged = 39;
+        private const int InternetOptionRefresh = 37;
+
+        private void SetSystemProxy()
+        {
+            try
+            {
+                using (RegistryKey key = Registry.CurrentUser.OpenSubKey(
+                    @"Software\Microsoft\Windows\CurrentVersion\Internet Settings", true))
+                {
+                    if (key == null) throw new InvalidOperationException("无法打开 Internet Settings");
+                    oldProxyEnable = key.GetValue("ProxyEnable");
+                    oldProxyServer = key.GetValue("ProxyServer");
+                    proxyWasSet = true;
+                    key.SetValue("ProxyEnable", 1, RegistryValueKind.DWord);
+                    key.SetValue("ProxyServer", "127.0.0.1:18080", RegistryValueKind.String);
+                }
+                InternetSetOption(IntPtr.Zero, InternetOptionSettingsChanged, IntPtr.Zero, 0);
+                InternetSetOption(IntPtr.Zero, InternetOptionRefresh, IntPtr.Zero, 0);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("设置系统代理失败：" + ex.Message);
+            }
+        }
+
+        private void RestoreSystemProxy()
+        {
+            if (!proxyWasSet)
+                return;
+            proxyWasSet = false;
+            try
+            {
+                using (RegistryKey key = Registry.CurrentUser.OpenSubKey(
+                    @"Software\Microsoft\Windows\CurrentVersion\Internet Settings", true))
+                {
+                    if (key == null) return;
+                    if (oldProxyEnable == null) key.DeleteValue("ProxyEnable", false);
+                    else key.SetValue("ProxyEnable", oldProxyEnable, RegistryValueKind.DWord);
+                    if (oldProxyServer == null) key.DeleteValue("ProxyServer", false);
+                    else key.SetValue("ProxyServer", oldProxyServer, RegistryValueKind.String);
+                }
+                InternetSetOption(IntPtr.Zero, InternetOptionSettingsChanged, IntPtr.Zero, 0);
+                InternetSetOption(IntPtr.Zero, InternetOptionRefresh, IntPtr.Zero, 0);
+            }
+            catch (Exception) { }
+        }    }
 }

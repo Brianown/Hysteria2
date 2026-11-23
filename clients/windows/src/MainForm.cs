@@ -25,6 +25,7 @@ namespace HysteriaLite
         private Label statusSubtitle;
         private Label footer;
         private Button connectButton;
+        private ComboBox modeCombo;
         private int selectedIndex = -1;
         private bool connecting;
 
@@ -172,13 +173,27 @@ namespace HysteriaLite
             listView.DoubleClick += delegate { ToggleConnection(); };
             listPad.Controls.Add(listView);
 
+            Panel footerPanel = new Panel();
+            footerPanel.Dock = DockStyle.Fill;
+            footerPanel.BackColor = Color.White;
+
+            modeCombo = new ComboBox();
+            modeCombo.DropDownStyle = ComboBoxStyle.DropDownList;
+            modeCombo.Items.Add("全局 TUN");
+            modeCombo.Items.Add("系统代理");
+            modeCombo.SelectedIndex = 0;
+            modeCombo.Width = 130;
+            modeCombo.Dock = DockStyle.Left;
+            footerPanel.Controls.Add(modeCombo);
+
             footer = new Label();
             footer.Dock = DockStyle.Fill;
             footer.TextAlign = ContentAlignment.MiddleLeft;
-            footer.Padding = new Padding(24, 0, 0, 0);
+            footer.Padding = new Padding(12, 0, 0, 0);
             footer.ForeColor = Muted;
-            footer.Text = "TUN 全局模式 · 需要管理员权限 · QUIC TLS 1.3";
-            root.Controls.Add(footer, 0, 4);
+            footer.Text = "全局 TUN 接管所有流量；系统代理只影响支持 WinINET 的程序";
+            footerPanel.Controls.Add(footer);
+            root.Controls.Add(footerPanel, 0, 4);
         }
         private static Button MakeButton(string text, bool primary)
         {
@@ -305,7 +320,7 @@ namespace HysteriaLite
             {
                 try
                 {
-                    manager.Start(profile);
+                    manager.Start(profile, modeCombo.SelectedIndex == 0);
                     BeginInvoke(new Action(delegate
                     {
                         connecting = false;
