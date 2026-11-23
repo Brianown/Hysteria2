@@ -189,9 +189,9 @@ namespace HysteriaLite
             footer = new Label();
             footer.Dock = DockStyle.Fill;
             footer.TextAlign = ContentAlignment.MiddleLeft;
-            footer.Padding = new Padding(12, 0, 0, 0);
+            footer.Padding = new Padding(140, 0, 0, 0);
             footer.ForeColor = Muted;
-            footer.Text = "全局 TUN 接管所有流量；系统代理只影响支持 WinINET 的程序";
+            footer.Text = "系统代理仅影响 WinINET 程序";
             footerPanel.Controls.Add(footer);
             root.Controls.Add(footerPanel, 0, 4);
         }

@@ -1,4 +1,4 @@
-# Hysteria2
+﻿# Hysteria2
 
 Hysteria2 是基于 QUIC/UDP 的抗丢包代理，适合高延迟、丢包严重的网络。
 
@@ -49,7 +49,7 @@ sudo HY_OBFS=1 bash server/install.sh
 
 - 解压后运行 `HysteriaLite.exe`（需要管理员权限）；
 - 导入 `hysteria2://` 链接；
-- 首次连接自动下载 Hysteria2 内核；
+- 压缩包已内置 Hysteria2 内核；
 - TUN 全局模式，QUIC + TLS 1.3；
 - 界面与 Xray Lite 类似。
 
