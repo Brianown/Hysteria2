@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+﻿#!/usr/bin/env bash
 # Hysteria2 一键安装：QUIC + TLS 1.3 + BBR，UDP 443
 # 可选：HY_OBFS=1 启用 Salamander 混淆；默认不启用，以便模拟 HTTP/3。
 set -Eeuo pipefail
@@ -197,7 +197,10 @@ SNI       : ${SERVER_NAME}
 客户端 URI: /root/hysteria2/uri.txt
 二维码    : /root/hysteria2/uri.png
 
-Windows：NekoRay / NekoBox / v2rayN 导入 URI
+完整链接（直接复制到客户端）：
+${URI}
+
+Windows：HysteriaLite / NekoRay / NekoBox / v2rayN 导入 URI
 Android：NekoBox for Android 导入 URI
 
 注意：
