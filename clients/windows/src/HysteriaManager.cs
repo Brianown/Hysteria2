@@ -85,6 +85,28 @@ namespace HysteriaLite
                 throw new InvalidOperationException(
                     "Hysteria2 启动失败（退出码 " + code + "）。\r\n" + log);
             }
+
+            // TUN 已建立后再做一次连通性检查；失败就自动退出，避免整台电脑断网。
+            if (tunMode)
+            {
+                try
+                {
+                    ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
+                    using (WebClient probe = new WebClient())
+                    {
+                        probe.Proxy = null;
+                        probe.Headers.Add("User-Agent", "HysteriaLite");
+                        probe.DownloadData("http://www.baidu.com");
+                    }
+                }
+                catch (Exception)
+                {
+                    string log = ReadLogTail();
+                    Stop();
+                    throw new InvalidOperationException(
+                        "TUN 已启动但无法访问网络，已自动断开并恢复系统网络。\r\n" + log);
+                }
+            }
         }
 
         public void Stop()
@@ -162,7 +184,7 @@ namespace HysteriaLite
                 b.AppendLine("    password: " + profile.ObfsPassword);
             }
             b.AppendLine("tun:");
-            b.AppendLine("  name: hysteria");
+            b.AppendLine("  name: hysteria2");
             b.AppendLine("  mtu: 1400");
             b.AppendLine("  timeout: 1m");
             b.AppendLine("  address:");
